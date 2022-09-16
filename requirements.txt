@@ -5,7 +5,6 @@ pandas
 datetime
 random
 numpy
-random
 base64
 email.message
 ssl
