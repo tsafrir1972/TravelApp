@@ -4,6 +4,5 @@ pymongo
 pandas
 datetime
 numpy
-smtplib
 string
 
