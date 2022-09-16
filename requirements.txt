@@ -3,7 +3,6 @@ requests
 pymongo
 pandas
 datetime
-time
 random
 numpy
 random
