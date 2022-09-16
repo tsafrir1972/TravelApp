@@ -8,7 +8,6 @@ pandas
 datetime
 time
 streamlit
-PIL
 random
 numpy
 random
@@ -17,6 +16,4 @@ email.message
 ssl
 smtplib
 string
-altair
-pandas
-streamlit
+
