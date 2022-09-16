@@ -3,7 +3,6 @@ requests
 pymongo
 pandas
 datetime
-random
 numpy
 base64
 email.message
