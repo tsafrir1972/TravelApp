@@ -19,6 +19,8 @@ from email.message import EmailMessage
 import ssl
 import smtplib
 import string
+import seaborn as sns
+from matplotlib import pyplot
 
 
 
@@ -57,7 +59,7 @@ class TravelOptions:
                     ''' % bin_str
             st.markdown(page_bg_img, unsafe_allow_html=True)
 
-        #set_background("my_trip.png")
+        set_background(r"C:\Python_Project\my_trip.png")
 
         st.title("Travel Planning Application")
         # gc = geonamescache.GeonamesCache()
@@ -65,7 +67,7 @@ class TravelOptions:
 
         selected_city = st.selectbox(
             'Enter Your Travel City : ',
-            ('New York', 'Honolulu', 'Bankok', 'Barcelona', 'Dubai', 'Paris', 'london', 'Tel Aviv'))
+            ('New York','San Francisco','Honolulu', 'Bankok', 'Barcelona', 'Dubai', 'Paris', 'london', 'Tel Aviv'))
 
         ############################### flight budget choose ########################
 
@@ -109,6 +111,7 @@ class TravelOptions:
         user_email = form.text_input(label='Enter Your Email', key=1)
         submit_button = form.form_submit_button(label='Submit')
 
+
         # user_email = st.text_input('Please Enter Your Email :')
         for i in keys:
             if submit_button:
@@ -118,8 +121,8 @@ class TravelOptions:
                     st.write('The email is invalid please type again and press submit')
                     None
                 else:
-                    self.Process_User_Input()
-                    self.send_to_user_email(user_email)
+                    #self.Process_User_Input()
+                    #self.send_to_user_email(user_email)
                     break
 
 
@@ -132,19 +135,19 @@ class TravelOptions:
             app_hotels = Hotels().find_hotels(selected_city)
             app_restorants = Restorants().find_restorants(selected_city)
             time.sleep(5)
-        st.success('Done! Please Check Your Email For Your Vacation Recommandations (Your Flights Are Listed Below) ')
+        st.success('Done! Please Check Your Email For Your Vacation Recommendations for ' +  selected_city + '(Your Flights Are Listed Below) ')
         st.balloons()
 
     def send_to_user_email(self, user_email):
 
-            email_sender = 'travel.app.tsafrir.noah@gmail.com'
-            email_password = 'uryujyfrnczkcmdz'
+            email_sender = 'travel.app.flyer@gmail.com'
+            email_password = 'efotfjtutkrsxzby'
             email_receiver = user_email
 
-            subject = 'Check out your travel recommendations'
+            subject = 'Check out your travel recommendations for ' + selected_city
             flights_list = ' '.join(map(str,df_list_airports))
             #body = "Your Recommended Flights - " + flights_list + "\n" + "Your Recommended Hotels  - " + flights_list + "\n" + "Your Recommended Restorants - " + flights_list
-            body = "Your Recommended Travel Information Are - \n\n\n" + "\n\n FLIGHTS \n\n " + df_airports.to_string() + "\n\n HOTELS \n\n " + df_hotels.to_string() + "\n\n RESTORANTS \n\n " + df_restorants.to_string()
+            body = "Your Recommended Travel Information Are - \n\n\n" + "\n\n FLIGHTS \n\n " + df_airports_string + "\n\n HOTELS \n\n " + df_hotels_string + "\n\n RESTORANTS \n\n " + df_restorants_string
             em = EmailMessage()
             em['From'] = email_sender
             em['To'] = email_receiver
@@ -163,8 +166,11 @@ class TravelOptions:
 class Flights():
 
     def find_flight(self, city):
+
         global df_list_airports
         global df_airports
+        global df_airports_string
+
         # print(city)
         url = "https://travel-advisor.p.rapidapi.com/airports/search"
 
@@ -179,7 +185,7 @@ class Flights():
         querystring = {"query": city, "locale": "en_US"}
 
         headers = {
-            'X-RapidAPI-Key': 'fd7a716347msh5fdefeb55c31dc8p15334bjsn20218c896049',
+            'X-RapidAPI-Key': 'aedd40ee0emsh7abd403f44557b7p1236b2jsn91e7e9c7abf6',
             "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com"
         }
 
@@ -190,7 +196,7 @@ class Flights():
 
         for i in range(0, list_length):
             # print(list_json[i])
-            var_price = random.randint(900, 1200)
+            var_price = random.randint(900, 1000)
             var_flight_number = random.randint(10000, 15000)
             list_json[i]['flight_number'] = 'NY' + str(var_flight_number)
             list_json[i]['price_in_dollars'] = var_price
@@ -213,10 +219,44 @@ class Flights():
 
         df_list_airports = df_airports.values.tolist()
 
-        df_airports.sort_values(by=['price_in_dollars'], ascending=False)
+        df_airports.sort_values(by=['price_in_dollars'], ascending=False).head(3)
+
+        df_airports = df_airports.head(3)
+
+        df_airports_string = df_airports.to_string()
+
+        def cell_colours(series):
+            red = 'background-color: red;'
+            yellow = 'background-color: yellow;'
+            turquoise = 'background-color: turquoise;'
+            default = ''
+
+            return [red if data == "failed" else yellow if data == "error" else green if data == "passed"
+            else turquoise for data in series]
+
+        headers = {
+            'selector': 'th.col_heading',
+            'props': 'background-color: #000066; color: white;'
+        }
+        df_airports = df_airports.style.set_table_styles([headers]) \
+            .apply(cell_colours)
+
+
+        #styles = [dict(selector="caption", props=[("font-size", "100%"),
+        #                                          ("font-weight", "bold")])]
+
+        #df_airports.style.set_caption('Flights').set_table_styles(styles)
+
+        #df_airports = df_airports.style.set_properties(**{
+        #    'background-color': 'turquoise',
+        #    'font-size': '15pt',
+        #})
+
+
+
 
         st.table(df_airports)
-        print(df_list_airports)
+        #print(df_list_airports)
         return df_list_airports
 
 
@@ -225,6 +265,7 @@ class Hotels():
     def find_hotels(self, city):
 
         global df_hotels
+        global df_hotels_string
 
         if city == 'New York':
             city = "60763"
@@ -249,9 +290,11 @@ class Hotels():
                        "currency": "USD", "order": "asc", "limit": "10", "sort": "recommended", "lang": "en_US"}
 
         headers = {
-            'X-RapidAPI-Key': 'fd7a716347msh5fdefeb55c31dc8p15334bjsn20218c896049',
+            'X-RapidAPI-Key': 'aedd40ee0emsh7abd403f44557b7p1236b2jsn91e7e9c7abf6',
             "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com"
         }
+
+
 
         response_hotels = requests.request("GET", url, headers=headers, params=querystring)
 
@@ -259,11 +302,11 @@ class Hotels():
 
         try:
 
-                print(' dict json :',dict_json)
+                #print(' dict json :',dict_json)
 
                 json_length = len(dict_json)
 
-                print('hotels_list_length :', json_length)
+                #print('hotels_list_length :', json_length)
 
                 for list_json in dict_json.values():
 
@@ -304,18 +347,40 @@ class Hotels():
 
                 # df_hotels['hotel_class'] = df_hotels['hotel_class'].astype('int')
 
-                df_hotels.sort_values(by=['hotel_class'], ascending=False)
+                df_hotels.sort_values(by=['hotel_class'], ascending=False).head(3)
+
+                df_hotels = df_hotels.head(3)
+
+                df_hotels_string = df_hotels.to_string()
+
+                def cell_colours(series):
+                    red = 'background-color: red;'
+                    yellow = 'background-color: yellow;'
+                    turquoise = 'background-color: turquoise;'
+                    default = ''
+
+                    return [red if data == "failed" else yellow if data == "error" else green if data == "passed"
+                    else turquoise for data in series]
+
+                headers = {
+                    'selector': 'th.col_heading',
+                    'props': 'background-color: #000066; color: white;'
+                }
+                df_hotels = df_hotels.style.set_table_styles([headers]) \
+                    .apply(cell_colours)
 
                 st.table(df_hotels)
 
         except Exception:
-            pass
+                df_hotels_string = 'Hotels API didn`t return results'
+                st.write('Hotels API didn`t return results')
 
 class Restorants():
 
     def find_restorants(self, city):
 
         global df_restorants
+        global df_restorants_string
 
         if city == 'New York':
             city = "60763"
@@ -338,9 +403,11 @@ class Restorants():
                        "open_now": "false", "lang": "en_US"}
 
         headers = {
-            'X-RapidAPI-Key': 'fd7a716347msh5fdefeb55c31dc8p15334bjsn20218c896049',
+            'X-RapidAPI-Key': 'aedd40ee0emsh7abd403f44557b7p1236b2jsn91e7e9c7abf6',
             "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com"
         }
+
+
 
         response_restorants = requests.request("GET", url, headers=headers, params=querystring)
 
@@ -380,40 +447,41 @@ class Restorants():
 
                 # df_restorants['rating'] = df_restorants['rating'].astype('int')
 
-                df_restorants.sort_values(by=['rating'], ascending=False)
+                df_restorants.sort_values(by=['rating'], ascending=False).head(3)
 
-                print(df_restorants)
+                df_restorants = df_restorants.head(3)
+
+                df_restorants_string = df_restorants.to_string()
+
+               # print(df_restorants)
+
+                def cell_colours(series):
+                    red = 'background-color: red;'
+                    yellow = 'background-color: yellow;'
+                    turquoise = 'background-color: turquoise;'
+                    default = ''
+
+                    return [red if data == "failed" else yellow if data == "error" else green if data == "passed"
+                    else turquoise for data in series]
+
+                headers = {
+                    'selector': 'th.col_heading',
+                    'props': 'background-color: #000066; color: white;'
+                }
+                df_restorants = df_restorants.style.set_table_styles([headers]) \
+                    .apply(cell_colours)
+
                 st.table(df_restorants)
-                st.balloons()
+
+                df = pd.DataFrame(
+                    np.random.randn(1000, 2) / [50, 50] + [40.69, -74],
+                    columns=['lat', 'lon'])
+
+                st.map(df)
+
         except Exception:
-            pass
+                df_restorants_string = 'Restorants API didn`t return Results'
+                TravelOptions().send_to_user_email(user_email)
+                st.write('Restorants API didn`t return Results')
 
-class send_mail():
 
-    def __init__(self):
-
-        self.send_email_python()
-
-    def send_email_python(self):
-        email_sender = 'tsafrir.naya@gmail.com'
-        email_password = 'gxqqwjqjidggktya'
-        email_receiver = user_email    #'tsafrir.aloni@gmail.com'
-
-        subject = 'Check out your travel recommandations'
-        body = """
-        Flights - 
-        Hotels - 
-        Restorants - 
-        """
-
-        em = EmailMessage()
-        em['From'] = email_sender
-        em['To'] = email_receiver
-        em['Subject'] = subject
-        em.set_content(body)
-
-        context = ssl.create_default_context()
-
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-            smtp.login(email_sender, email_password)
-            smtp.sendmail(email_sender, email_receiver, em.as_string())
