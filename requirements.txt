@@ -4,5 +4,6 @@ pymongo
 pandas
 datetime
 numpy
+altair
 
 
