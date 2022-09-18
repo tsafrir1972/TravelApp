@@ -1,9 +1,5 @@
 streamlit
-requests
-pymongo
 pandas
-datetime
-numpy
 altair
 
 
